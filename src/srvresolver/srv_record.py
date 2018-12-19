@@ -13,7 +13,7 @@
 ##########################################################################
 
 
-from typing import Tuple
+from typing import Optional, Tuple
 
 
 class SRVRecord(object):
@@ -22,18 +22,20 @@ class SRVRecord(object):
     '''
 
     def __init__(self, host: str, port: int, weight: int,
-                 priority: int) -> None:
+                 priority: int, proto: Optional[str] = None) -> None:
         '''
         srv record class constructor
         :param host: srv record host
         :param port: srv record port
         :param weight: srv record weight
         :param priority: srv record priority
+        :param proto: record protocol, optional
         '''
         self.host = host.rstrip('.')
         self.port = port
         self.weight = weight
         self.priority = priority
+        self.proto = proto
 
     @property
     def socket(self) -> Tuple[str, int]:

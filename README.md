@@ -36,11 +36,9 @@ Extract postgres records from SRV and check whether master or slave. Requires `p
 ```python
 from srvresolver.postgres_resolver import PostgresResolver
 
-resolver = PostgresResolver(database, username, password)
-
 # get random working slave record
-resolver.get_slave('_postgresql._tcp.example.com')
+PostgresResolver.get_slave('_postgresql._tcp.example.com', username, password)
 
 # get random working master record
-resolver.get_master('_postgresql._tcp.example.com')
+PostgresResolver.get_master('_postgresql._tcp.example.com', username, password)
 ```

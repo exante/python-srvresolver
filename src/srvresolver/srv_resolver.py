@@ -18,7 +18,7 @@ import random
 import socket
 
 from contextlib import closing
-from typing import Iterable, List, Optional, Tuple
+from typing import Iterable, List, Optional
 
 from srvresolver.srv_record import SRVRecord
 
@@ -29,19 +29,21 @@ class SRVResolver(object):
     '''
 
     @staticmethod
-    def check_port(host: Tuple[str, int], socket_family: int,
+    def check_port(record: SRVRecord, socket_family: int,
                    socket_type: int, timeout: int = 1) -> bool:
         '''
         check if server and port are available
-        :param host: socket tuple of (host, port)
+        :param record: record to check port
         :param socket_family: socket family to be passed to socket constructor
         :param socket_type: socket type to be passed to socket constructor
         :param timeout: socket connection timeout
         :return: true if connection was successful
         '''
+        if socket_type == -1:
+            socket_type = SRVResolver.guess_socket_type(record.proto)
         with closing(socket.socket(socket_family, socket_type)) as sock:
             sock.settimeout(timeout)
-            return sock.connect_ex(host) == 0
+            return sock.connect_ex(record.socket) == 0
 
     @staticmethod
     def get_highest_priority(records: Iterable[SRVRecord]) -> List[SRVRecord]:
@@ -74,7 +76,7 @@ class SRVResolver(object):
         # build weighted list
         if all(record.weight == 0 for record in by_priority):
             # special case according to rfc
-            by_weight = [record for record in by_priority]
+            by_weight = by_priority
         else:
             by_weight = list()
             for record in by_priority:
@@ -86,20 +88,37 @@ class SRVResolver(object):
             return None
 
     @staticmethod
+    def guess_socket_type(proto: Optional[str]) -> int:
+        '''
+        try to get socket type from srv record
+        :param proto: record protocol according to service.proto.<domain> template
+        :return: socket type or -1 if unknown protocol
+        '''
+        if proto in ('tcp', '_tcp'):
+            return socket.SOCK_STREAM
+        elif proto in ('udp', '_udp'):
+            return socket.SOCK_DGRAM
+        else:
+            return -1
+
+    @staticmethod
     def resolve(address: str) -> List[SRVRecord]:
         '''
         basic srv address resolve method
         :param address: address to resolve
         :return: list of all records from DNS server available for this address
         '''
+        records = DNS.query(address, 'SRV')
+        proto = records.canonical_name.labels[1].decode('utf8').lstrip('_')
         return [
-            SRVRecord(str(srv.target), srv.port, srv.weight, srv.priority)
-            for srv in DNS.query(address, 'SRV')
+            SRVRecord(str(srv.target), srv.port,
+                      srv.weight, srv.priority, proto)
+            for srv in records
         ]
 
     @staticmethod
-    def resolve_active(address: str, socket_family: int = socket.AF_INET,
-                       socket_type: int = socket.SOCK_STREAM, timeout: int = 1) -> List[SRVRecord]:
+    def resolve_active(address: str, socket_family: int = -1,
+                       socket_type: int = -1, timeout: int = 1) -> List[SRVRecord]:
         '''
         resolve srv address and return only records which are available for this address
         :param address: address to resolve
@@ -111,14 +130,14 @@ class SRVResolver(object):
         return list(
             filter(
                 lambda r: SRVResolver.check_port(
-                    r.socket, socket_family, socket_type, timeout),
+                    r, socket_family, socket_type, timeout),
                 SRVResolver.resolve(address)
             )
         )
 
     @staticmethod
-    def resolve_first(address: str, socket_family: int = socket.AF_INET,
-                      socket_type: int = socket.SOCK_STREAM, timeout: int = 1) -> Optional[SRVRecord]:
+    def resolve_first(address: str, socket_family: int = -1,
+                      socket_type: int = -1, timeout: int = 1) -> Optional[SRVRecord]:
         '''
         quick and dirty resolve srv record and return first available address
         :param address: address to resolve
@@ -132,13 +151,13 @@ class SRVResolver(object):
 
         for record in records:
             if SRVResolver.check_port(
-                    record.socket, socket_family, socket_type, timeout):
+                    record, socket_family, socket_type, timeout):
                 return record
         return None
 
     @staticmethod
-    def resolve_random(address: str, socket_family: int = socket.AF_INET,
-                       socket_type: int = socket.SOCK_STREAM, timeout: int = 1) -> Optional[SRVRecord]:
+    def resolve_random(address: str, socket_family: int = -1,
+                       socket_type: int = -1, timeout: int = 1) -> Optional[SRVRecord]:
         '''
         resolve srv address and return random working record according to weight and priority policy
         :param address: address to resolve
