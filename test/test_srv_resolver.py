@@ -18,6 +18,7 @@ import unittest
 from srvresolver.srv_record import SRVRecord
 from srvresolver.srv_resolver import SRVResolver
 
+
 valid_srv_record = SRVRecord('httpbin.org', 80, 1, 1, 'tcp')
 invalid_srv_record = SRVRecord('httpbin.org', 666, 1, 1, 'tcp')
 
@@ -35,6 +36,16 @@ srv_records_with_two_highest_priority = [
 
 srv_records_with_same_priority = [valid_srv_record] * 3 + [invalid_srv_record]
 
+cycle_count = 10
+srv_records_with_different_weights = {
+    0: SRVRecord('httpbin.org', 80, 0, 1, 'tcp'),
+    100: SRVRecord('httpbin.org', 80, 100, 1, 'tcp'),
+    200: SRVRecord('httpbin.org', 80, 200, 1, 'tcp'),
+    300: SRVRecord('httpbin.org', 80, 300, 1, 'tcp'),
+    400: SRVRecord('httpbin.org', 80, 400, 1, 'tcp'),
+    500: SRVRecord('httpbin.org', 80, 500, 1, 'tcp')
+}
+
 
 class SRVResolverTestCase(unittest.TestCase):
 
@@ -51,6 +62,17 @@ class SRVResolverTestCase(unittest.TestCase):
         self.assertIn(result, [valid_srv_record, invalid_srv_record])
         result = SRVResolver.get_random(srv_records_with_same_priority)
         self.assertIn(result, srv_records_with_same_priority)
+
+    def test_get_random_with_weight(self):
+        total_weight = sum(srv_records_with_different_weights.keys())
+        random_weights = dict()
+        for _ in range(total_weight * cycle_count):
+            result = SRVResolver.get_random(srv_records_with_different_weights.values())
+            random_weights.setdefault(result.weight, 0)
+            random_weights[result.weight] += 1
+        self.assertEqual(random_weights.get(0, 0), 0)
+        for weight, count in random_weights.items():
+            self.assertAlmostEqual(count / (total_weight * cycle_count), weight / total_weight, delta=0.1)
 
 
 if __name__ == '__main__':
