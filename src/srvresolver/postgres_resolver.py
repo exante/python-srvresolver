@@ -19,10 +19,10 @@ import socket
 from typing import Optional
 
 from srvresolver.srv_record import SRVRecord
-from srvresolver.srv_resolver import SRVResolver
+from srvresolver.srv_resolver_cached import SRVResolverCached
 
 
-class PostgresResolver(SRVResolver):
+class PostgresResolver(SRVResolverCached):
 
     @staticmethod
     def with_protocol_record(record: SRVRecord, database: str,

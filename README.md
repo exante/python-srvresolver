@@ -7,10 +7,7 @@ Helper to get record from SRV address according to [RFC2782](https://tools.ietf.
 * support of record weights and priorities
 * check service availability at specific port
 * random record selector
-
-## TODO
-
-* dns cache support
+* cache with ttl support
 
 ## Example
 
@@ -28,6 +25,19 @@ SRVResolver.resolve_first('_service._tcp.example.com')
 ```
 
 ## Adds
+
+### Resolver with DNS cache
+
+This one uses cache implemented in dnspython module.
+
+```python
+from srvresolver.srv_resolver_cached import SRVResolverCached
+
+# get all records
+SRVResolverCached.resolve('_service._tcp.example.com')
+# same but don't do dns request, load from cache if not expired
+SRVResolverCached.resolve('_service._tcp.example.com')
+```
 
 ### Postgres SRV record resolver
 
