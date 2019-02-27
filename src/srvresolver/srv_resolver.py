@@ -18,7 +18,7 @@ import random
 import socket
 
 from contextlib import closing
-from typing import Iterable, List, Optional
+from typing import Iterable, Dict, List, Optional
 
 from srvresolver.srv_record import SRVRecord
 
@@ -52,7 +52,7 @@ class SRVResolver(object):
         :param records: list of srv records
         :return: filtered srv records
         '''
-        by_priority = dict()  # TODO type annotation
+        by_priority = dict()  # type: Dict[int, List[SRVRecord]]
         for record in records:
             by_priority.setdefault(record.priority, list()).append(record)
 

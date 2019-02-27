@@ -16,7 +16,7 @@
 from srvresolver.srv_resolver import DNS, SRVResolver
 
 DNS.reset_default_resolver()
-DNS.default_resolver.cache = DNS.Cache()
+DNS.default_resolver.cache = DNS.Cache()  # type: ignore
 
 
 class SRVResolverCached(SRVResolver):
