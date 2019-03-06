@@ -17,6 +17,7 @@ setup(
     version=metadata['__version__'],
 
     description='SRV record resolver for python',
+    long_description_content_type='text/markdown',
     long_description=description,
 
     url='https://github.com/exante/python-srvresolver',
