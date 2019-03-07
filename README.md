@@ -1,5 +1,7 @@
 # SRV resolver
 
+[![PyPI version](https://badge.fury.io/py/srvresolver.svg)](https://pypi.python.org/pypi/srvresolver/) [![PyPI license](https://img.shields.io/pypi/l/srvresolver.svg)](https://pypi.python.org/pypi/srvresolver/) [![PyPI format](https://img.shields.io/pypi/format/srvresolver.svg)](https://pypi.python.org/pypi/srvresolver/)
+
 Helper to get record from SRV address according to [RFC2782](https://tools.ietf.org/html/rfc2782).
 
 ## Features
@@ -8,6 +10,14 @@ Helper to get record from SRV address according to [RFC2782](https://tools.ietf.
 * check service availability at specific port
 * random record selector
 * cache with ttl support
+
+## Install
+
+The package can be installed simply by using `pip`:
+
+```sh
+pip install srvresolver
+```
 
 ## Example
 
