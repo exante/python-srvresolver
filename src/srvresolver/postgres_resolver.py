@@ -25,25 +25,6 @@ from srvresolver.srv_resolver_cached import SRVResolverCached
 class PostgresResolver(SRVResolverCached):
 
     @staticmethod
-    def with_protocol_record(record: SRVRecord, database: str,
-                             username: str, password: Optional[str]) -> str:
-        '''
-        get postgres database record as string
-        :param record: postgres instance record in srv
-        :param database: postgres database
-        :param username: postgres username
-        :param password: postgres password
-        :return:
-        '''
-        return 'postgresql://{username}{auth}@{host}:{port}/{database}'.format(
-            username=username,
-            auth=':' + password if password is not None else '',
-            host=record.host,
-            port=record.port,
-            database=database
-        )
-
-    @staticmethod
     def is_master(record: SRVRecord, username: str,
                   password: Optional[str]) -> Optional[bool]:
         '''
@@ -56,8 +37,8 @@ class PostgresResolver(SRVResolverCached):
         '''
         try:
             with psycopg2.connect(
-                    PostgresResolver.with_protocol_record(
-                        record, 'postgres', username, password)) as conn:
+                    dbname='postgres', user=username, password=password,
+                    host=record.host, port=record.port) as conn:
                 with conn.cursor() as cursor:
                     cursor.execute('SELECT pg_is_in_recovery();')
                     is_slave = cursor.fetchone()[0]
