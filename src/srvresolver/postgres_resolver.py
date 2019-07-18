@@ -40,9 +40,13 @@ class PostgresResolver(SRVResolverCached):
                     dbname='postgres', user=username, password=password,
                     host=record.host, port=record.port) as conn:
                 with conn.cursor() as cursor:
-                    cursor.execute('SELECT pg_is_in_recovery();')
-                    is_slave = cursor.fetchone()[0]
-                    return not is_slave
+                    cursor.execute('SELECT * FROM pg_replication_slots;')
+                    if cursor.fetchone() is None:
+                        cursor.execute('SELECT pg_is_in_recovery();')
+                        return not cursor.fetchone()[0]
+                    else:
+                        cursor.execute('SELECT * from pg_replication_slots WHERE active_pid IS NOT NULL;')
+                        return cursor.fetchone() is not None
         except Exception:
             return None
 
