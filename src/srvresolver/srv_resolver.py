@@ -43,7 +43,10 @@ class SRVResolver(object):
             socket_type = SRVResolver.guess_socket_type(record.proto)
         with closing(socket.socket(socket_family, socket_type)) as sock:
             sock.settimeout(timeout)
-            return sock.connect_ex(record.socket) == 0
+            try:
+                return sock.connect_ex(record.socket) == 0
+            except socket.gaierror:  # could not resolve record
+                return False
 
     @staticmethod
     def get_highest_priority(records: Iterable[SRVRecord]) -> List[SRVRecord]:
